@@ -3,14 +3,13 @@ import sys
 import os
 
 # Add the parent directory of 'synchronous' to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from utils.server_info import get_ip_and_port
-from ganzin.sol_sdk.asynchronous.async_client import (
-    AsyncClient, recv_video, recv_gaze
-)
+from ganzin.sol_sdk.asynchronous.async_client import AsyncClient, recv_video, recv_gaze
 from ganzin.sol_sdk.common_models import Camera
 import cv2
+
 
 async def main():
     address, port = get_ip_and_port()
@@ -20,10 +19,14 @@ async def main():
         error_event = asyncio.Event()
 
         frames = asyncio.Queue(1)
-        collect_video_task = asyncio.create_task(keep_last_video_frame(ac, frames, error_event))
+        collect_video_task = asyncio.create_task(
+            keep_last_video_frame(ac, frames, error_event)
+        )
 
-        gazes = asyncio.Queue()       
-        collect_gaze_task = asyncio.create_task(collect_gaze(ac, gazes, error_event, timeout_seconds))
+        gazes = asyncio.Queue()
+        collect_gaze_task = asyncio.create_task(
+            collect_gaze(ac, gazes, error_event, timeout_seconds)
+        )
 
         try:
             await draw_gaze_on_frame(frames, gazes, error_event, timeout_seconds)
@@ -31,7 +34,10 @@ async def main():
             collect_video_task.cancel()
             collect_gaze_task.cancel()
 
-async def keep_last_video_frame(ac: AsyncClient, queue: asyncio.Queue, error_event: asyncio.Event) -> None:
+
+async def keep_last_video_frame(
+    ac: AsyncClient, queue: asyncio.Queue, error_event: asyncio.Event
+) -> None:
     async for frame in recv_video(ac, Camera.SCENE):
         if error_event.is_set():
             break
@@ -40,7 +46,10 @@ async def keep_last_video_frame(ac: AsyncClient, queue: asyncio.Queue, error_eve
             queue.get_nowait()
         queue.put_nowait(frame)
 
-async def collect_gaze(ac: AsyncClient, queue: asyncio.Queue, error_event: asyncio.Event, timeout) -> None:
+
+async def collect_gaze(
+    ac: AsyncClient, queue: asyncio.Queue, error_event: asyncio.Event, timeout
+) -> None:
     try:
         async for gaze in recv_gaze(ac):
             if error_event.is_set():
@@ -49,6 +58,7 @@ async def collect_gaze(ac: AsyncClient, queue: asyncio.Queue, error_event: async
             await asyncio.wait_for(queue.put(gaze), timeout=timeout)
     except Exception as e:
         error_event.set()
+
 
 async def draw_gaze_on_frame(frame_queue, gazes, error_event: asyncio.Event, timeout):
     while not error_event.is_set():
@@ -63,11 +73,13 @@ async def draw_gaze_on_frame(frame_queue, gazes, error_event: asyncio.Event, tim
         cv2.circle(frame_buffer, center, radius, bgr_color, thickness)
 
         cv2.imshow('Press "q" to exit', frame_buffer)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        if cv2.waitKey(1) & 0xFF == ord("q"):
             return
+
 
 async def get_video_frame(queue, timeout):
     return await asyncio.wait_for(queue.get(), timeout=timeout)
+
 
 async def find_gaze_near_frame(queue, timestamp, timeout):
     item = await asyncio.wait_for(queue.get(), timeout=timeout)
@@ -82,6 +94,7 @@ async def find_gaze_near_frame(queue, timestamp, timeout):
             if next_item.get_timestamp() > timestamp:
                 return next_item
             item = next_item
+
 
 if __name__ == "__main__":
     asyncio.run(main())

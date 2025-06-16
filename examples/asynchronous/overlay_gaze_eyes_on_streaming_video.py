@@ -6,7 +6,7 @@ import sys
 import os
 
 # Add the parent directory of 'synchronous' to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from utils.server_info import get_ip_and_port
 from ganzin.sol_sdk.asynchronous.async_client import AsyncClient, recv_gaze, recv_video
@@ -20,28 +20,44 @@ async def main():
 
     async with AsyncClient(address, port) as ac:
         if not (await ac.get_status()).eye_image_encoding_enabled:
-            print('Warning: Please enable eye image encoding and try again.')
+            print("Warning: Please enable eye image encoding and try again.")
             return
 
         error_event = asyncio.Event()
 
         frames = asyncio.Queue(1)
-        collect_video_task = asyncio.create_task(keep_last_video_frame(ac, frames, error_event))
+        collect_video_task = asyncio.create_task(
+            keep_last_video_frame(ac, frames, error_event)
+        )
 
-        gazes = asyncio.Queue()       
-        collect_gaze_task = asyncio.create_task(collect_gaze(ac, gazes, error_event, timeout_seconds))
+        gazes = asyncio.Queue()
+        collect_gaze_task = asyncio.create_task(
+            collect_gaze(ac, gazes, error_event, timeout_seconds)
+        )
 
         left_eye_data = asyncio.Queue()
         collect_left_eye_task = asyncio.create_task(
-            collect_eye(ac, left_eye_data, Camera.LEFT_EYE, error_event, timeout_seconds))
-        
+            collect_eye(
+                ac, left_eye_data, Camera.LEFT_EYE, error_event, timeout_seconds
+            )
+        )
+
         right_eye_data = asyncio.Queue()
         collect_right_eye_task = asyncio.create_task(
-            collect_eye(ac, right_eye_data, Camera.RIGHT_EYE, error_event, timeout_seconds))
+            collect_eye(
+                ac, right_eye_data, Camera.RIGHT_EYE, error_event, timeout_seconds
+            )
+        )
 
         try:
-            await present(frames, gazes, left_eye_data, right_eye_data, \
-                          error_event, timeout_seconds)
+            await present(
+                frames,
+                gazes,
+                left_eye_data,
+                right_eye_data,
+                error_event,
+                timeout_seconds,
+            )
         except Exception as e:
             error_message = str(e)
             print("An error occurred: ", error_message if error_message else type(e))
@@ -51,7 +67,10 @@ async def main():
             collect_left_eye_task.cancel()
             collect_right_eye_task.cancel()
 
-async def keep_last_video_frame(ac: AsyncClient, queue: asyncio.Queue, error_event: asyncio.Event) -> None:
+
+async def keep_last_video_frame(
+    ac: AsyncClient, queue: asyncio.Queue, error_event: asyncio.Event
+) -> None:
     async for frame in recv_video(ac, Camera.SCENE):
         if error_event.is_set():
             break
@@ -60,7 +79,10 @@ async def keep_last_video_frame(ac: AsyncClient, queue: asyncio.Queue, error_eve
             queue.get_nowait()
         queue.put_nowait(frame)
 
-async def collect_gaze(ac: AsyncClient, queue: asyncio.Queue, error_event: asyncio.Event, timeout) -> None:
+
+async def collect_gaze(
+    ac: AsyncClient, queue: asyncio.Queue, error_event: asyncio.Event, timeout
+) -> None:
     try:
         async for gaze in recv_gaze(ac):
             if error_event.is_set():
@@ -70,7 +92,14 @@ async def collect_gaze(ac: AsyncClient, queue: asyncio.Queue, error_event: async
     except Exception as e:
         error_event.set()
 
-async def collect_eye(ac: AsyncClient, queue: asyncio.Queue, camera: Camera, error_event: asyncio.Event, timeout) -> None:
+
+async def collect_eye(
+    ac: AsyncClient,
+    queue: asyncio.Queue,
+    camera: Camera,
+    error_event: asyncio.Event,
+    timeout,
+) -> None:
     try:
         async for eye in recv_video(ac, camera):
             if error_event.is_set():
@@ -80,7 +109,15 @@ async def collect_eye(ac: AsyncClient, queue: asyncio.Queue, camera: Camera, err
     except Exception as e:
         error_event.set()
 
-async def present(frames, gaze_queue, left_eye_queue, right_eye_queue, error_event: asyncio.Event, timeout):
+
+async def present(
+    frames,
+    gaze_queue,
+    left_eye_queue,
+    right_eye_queue,
+    error_event: asyncio.Event,
+    timeout,
+):
     while not error_event.is_set():
         scene_camera_datum = await get_video_frame(frames, timeout)
         timestamp = scene_camera_datum.get_timestamp()
@@ -100,19 +137,21 @@ async def present(frames, gaze_queue, left_eye_queue, right_eye_queue, error_eve
         draw_to_center_top(buffer, right_eye.get_buffer(), Camera.RIGHT_EYE, 0.5)
 
         cv2.imshow('Press "q" to exit', buffer)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        if cv2.waitKey(1) & 0xFF == ord("q"):
             return
+
 
 async def get_video_frame(queue, timeout):
     return await asyncio.wait_for(queue.get(), timeout=timeout)
 
+
 async def get_all_queue_items(queue, timeout):
     items = []
-   
+
     # Wait for the first item with timeout
     item = await asyncio.wait_for(queue.get(), timeout=timeout)
     items.append(item)
-    
+
     # Continue retrieving items until the queue is empty
     while True:
         try:
@@ -122,6 +161,7 @@ async def get_all_queue_items(queue, timeout):
             break
     return items
 
+
 def draw_gaze(gaze, frame):
     center = (int(gaze.combined.gaze_2d.x), int(gaze.combined.gaze_2d.y))
     radius = 30
@@ -130,11 +170,13 @@ def draw_gaze(gaze, frame):
     cv2.circle(frame, center, radius, bgr_color, thickness)
     return frame
 
+
 def draw_to_center_top(
-        scene_cam_frame: numpy.ndarray,
-        eye_frame: numpy.ndarray, camera: Camera,
-        ratio: float = 1.0,
-        center_margin = 5
+    scene_cam_frame: numpy.ndarray,
+    eye_frame: numpy.ndarray,
+    camera: Camera,
+    ratio: float = 1.0,
+    center_margin=5,
 ) -> tuple[int, int]:
     half_frame_width = scene_cam_frame.shape[1] // 2
     pos_x = half_frame_width
@@ -145,7 +187,7 @@ def draw_to_center_top(
 
     match camera:
         case Camera.LEFT_EYE:
-            pos_x -= (resized_eye_width + center_margin)
+            pos_x -= resized_eye_width + center_margin
 
         case Camera.RIGHT_EYE:
             pos_x += center_margin
@@ -153,8 +195,12 @@ def draw_to_center_top(
         case _:
             raise ValueError(f"Invalid camera type: {camera}")
 
-    scene_cam_frame[pos_y:pos_y + resized_eye_height, \
-                    pos_x:pos_x + resized_eye_width] = resized_eye
+    scene_cam_frame[
+        pos_y : pos_y + resized_eye_height, pos_x : pos_x + resized_eye_width
+    ] = resized_eye
 
-if __name__ == '__main__':
+    return (pos_x, pos_y)
+
+
+if __name__ == "__main__":
     asyncio.run(main())
