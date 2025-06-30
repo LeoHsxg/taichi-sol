@@ -1,5 +1,15 @@
+建立虛擬環境, 會要等一下
 python -m venv venv
+
+啟動虛擬環境
 .\venv\Scripts\Activate
+
+安裝設定好的套件
+pip install -r requirements.txt
+
+檢測裝的內容以及版本
 pip list
-activate, deactivate
+
+關閉虛擬環境
+deactivate
 
