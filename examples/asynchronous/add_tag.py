@@ -1,4 +1,3 @@
-import asyncio
 import sys
 import os
 
@@ -6,6 +5,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from utils.server_info import get_ip_and_port
+from examples.server_info import get_ip_and_port
 from ganzin.sol_sdk.asynchronous.async_client import AsyncClient
 from ganzin.sol_sdk.requests import AddTagRequest, TagColor
 

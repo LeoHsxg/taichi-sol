@@ -21,16 +21,23 @@ def main():
 
     try:
         while True:
-            frame_data = sc.get_scene_frames_from_streaming(timeout=5.0)
+            frame_data = sc.get_video_frames_from_streaming(timeout=5.0)
             frame_datum = frame_data[-1]  # get the last frame
             buffer = frame_datum.get_buffer()
+            buffer = cv2.resize(
+                buffer, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA
+            )
+
             gazes = sc.get_gazes_from_streaming(timeout=5.0)
             gaze = find_nearest_timestamp_match(frame_datum.get_timestamp(), gazes)
 
-            center = (int(gaze.combined.gaze_2d.x), int(gaze.combined.gaze_2d.y))
-            radius = 30
+            center = (
+                int(gaze.combined.gaze_2d.x / 2),
+                int(gaze.combined.gaze_2d.y / 2),
+            )
+            radius = 15
             bgr_color = (255, 255, 0)
-            thickness = 5
+            thickness = 3
             cv2.circle(buffer, center, radius, bgr_color, thickness)
 
             cv2.imshow('Press "q" to exit', buffer)

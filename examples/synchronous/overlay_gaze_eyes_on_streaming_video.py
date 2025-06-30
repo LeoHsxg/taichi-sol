@@ -26,9 +26,15 @@ def main():
 
     try:
         while True:
-            frame_data = sc.get_scene_frames_from_streaming(timeout=5.0)
+            frame_data = sc.get_video_frames_from_streaming(timeout=5.0)
+            if not frame_data:
+                continue
+
             frame_datum = frame_data[-1]  # get the last frame
             buffer = frame_datum.get_buffer()
+            buffer = cv2.resize(
+                buffer, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA
+            )
             gazes = sc.get_gazes_from_streaming(timeout=5.0)
             gaze = find_nearest_timestamp_match(frame_datum.get_timestamp(), gazes)
             left_eye_data = sc.get_left_eye_frames_from_streaming(timeout=5.0)
@@ -41,13 +47,16 @@ def main():
             )
 
             # Overlay gaze on scene camera frame
-            center = (int(gaze.combined.gaze_2d.x), int(gaze.combined.gaze_2d.y))
-            radius = 30
+            center = (
+                int(gaze.combined.gaze_2d.x / 2),
+                int(gaze.combined.gaze_2d.y / 2),
+            )
+            radius = 15
             bgr_color = (255, 255, 0)
-            thickness = 5
+            thickness = 3
             cv2.circle(buffer, center, radius, bgr_color, thickness)
 
-            resize_ratio = 0.5
+            resize_ratio = 0.25
             # Overlay left eye on scene camera frame
             left_eye_frame = left_eye_datum.get_buffer()
             draw_to_center_top(buffer, left_eye_frame, Camera.LEFT_EYE, resize_ratio)
@@ -56,7 +65,7 @@ def main():
             right_eye_frame = right_eye_datum.get_buffer()
             draw_to_center_top(buffer, right_eye_frame, Camera.RIGHT_EYE, resize_ratio)
 
-            cv2.imshow("Press 'q' to exit", buffer)
+            cv2.imshow('Press "q" to exit', buffer)
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
     except Exception as ex:
@@ -94,8 +103,6 @@ def draw_to_center_top(
     scene_cam_frame[
         pos_y : pos_y + resized_eye_height, pos_x : pos_x + resized_eye_width
     ] = resized_eye
-
-    return pos_x, pos_y
 
 
 if __name__ == "__main__":

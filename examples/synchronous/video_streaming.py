@@ -19,7 +19,9 @@ def main():
 
     try:
         while True:
-            frame_data = sc.get_scene_frames_from_streaming(timeout=5.0)
+            frame_data = sc.get_video_frames_from_streaming(timeout=5.0)
+            if not frame_data:
+                continue
             frame_datum = frame_data[-1]  # get the last frame
             cv2.imshow('Press "q" to quit', frame_datum.get_buffer())
             if cv2.waitKey(1) & 0xFF == ord("q"):

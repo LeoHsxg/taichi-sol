@@ -65,11 +65,14 @@ async def draw_gaze_on_frame(frame_queue, gazes, error_event: asyncio.Event, tim
         frame = await get_video_frame(frame_queue, timeout)
         gaze = await find_gaze_near_frame(gazes, frame.get_timestamp(), timeout)
         frame_buffer = frame.get_buffer()
+        frame_buffer = cv2.resize(
+            frame_buffer, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA
+        )
 
-        center = (int(gaze.combined.gaze_2d.x), int(gaze.combined.gaze_2d.y))
-        radius = 30
+        center = (int(gaze.combined.gaze_2d.x / 2), int(gaze.combined.gaze_2d.y / 2))
+        radius = 15
         bgr_color = (255, 255, 0)
-        thickness = 5
+        thickness = 3
         cv2.circle(frame_buffer, center, radius, bgr_color, thickness)
 
         cv2.imshow('Press "q" to exit', frame_buffer)

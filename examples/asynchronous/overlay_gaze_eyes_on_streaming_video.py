@@ -132,9 +132,10 @@ async def present(
         right_eye = find_nearest_timestamp_match(timestamp, right_eye_data)
 
         buffer = scene_camera_datum.get_buffer()
+        buffer = cv2.resize(buffer, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
         draw_gaze(gaze, buffer)
-        draw_to_center_top(buffer, left_eye.get_buffer(), Camera.LEFT_EYE, 0.5)
-        draw_to_center_top(buffer, right_eye.get_buffer(), Camera.RIGHT_EYE, 0.5)
+        draw_to_center_top(buffer, left_eye.get_buffer(), Camera.LEFT_EYE, 0.3)
+        draw_to_center_top(buffer, right_eye.get_buffer(), Camera.RIGHT_EYE, 0.3)
 
         cv2.imshow('Press "q" to exit', buffer)
         if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -163,10 +164,10 @@ async def get_all_queue_items(queue, timeout):
 
 
 def draw_gaze(gaze, frame):
-    center = (int(gaze.combined.gaze_2d.x), int(gaze.combined.gaze_2d.y))
-    radius = 30
+    center = (int(gaze.combined.gaze_2d.x / 2), int(gaze.combined.gaze_2d.y / 2))
+    radius = 15
     bgr_color = (255, 255, 0)
-    thickness = 5
+    thickness = 3
     cv2.circle(frame, center, radius, bgr_color, thickness)
     return frame
 
@@ -198,8 +199,6 @@ def draw_to_center_top(
     scene_cam_frame[
         pos_y : pos_y + resized_eye_height, pos_x : pos_x + resized_eye_width
     ] = resized_eye
-
-    return (pos_x, pos_y)
 
 
 if __name__ == "__main__":
