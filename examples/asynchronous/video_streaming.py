@@ -1,5 +1,5 @@
 import asyncio
-from examples.server_info import get_ip_and_port
+from utils.server_info import get_ip_and_port
 from ganzin.sol_sdk.asynchronous.async_client import AsyncClient, recv_video
 from ganzin.sol_sdk.common_models import Camera
 import cv2

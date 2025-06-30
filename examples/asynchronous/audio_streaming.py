@@ -1,11 +1,12 @@
 import sys
 import os
+import asyncio
 
 # Add the parent directory of 'synchronous' to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from utils.server_info import get_ip_and_port
-from examples.server_info import get_ip_and_port
+from utils.server_info import get_ip_and_port
 from ganzin.sol_sdk.asynchronous.async_client import AsyncClient, recv_audio
 from ganzin.sol_sdk.common_models import Camera
 from ganzin.sol_sdk.streaming.audio_config import AudioConfig
