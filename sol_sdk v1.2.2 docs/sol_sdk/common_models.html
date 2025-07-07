@@ -84,7 +84,7 @@
 
 
 
-	<p><strong><i>Ganzin Sol SDK v1.1.1</i></strong></p>
+	<p><strong><i>Ganzin Sol SDK v1.2.2</i></strong></p>
 </div>
     </nav>
     <main class="pdoc">
@@ -97,14 +97,14 @@
 
                         <label class="view-source-button" for="mod-common_models-view-source"><span>View Source</span></label>
 
-                        <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos"> 1</span></a><span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
-</span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a><span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">StrEnum</span>
+                        <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos"> 1</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+</span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">StrEnum</span>
 </span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a>
-</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="k">class</span> <span class="nc">ApiStatus</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
+</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="k">class</span><span class="w"> </span><span class="nc">ApiStatus</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
 </span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a>    <span class="n">SUCCESS</span> <span class="o">=</span> <span class="s2">&quot;SUCCESS&quot;</span><span class="p">,</span>
 </span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a>    <span class="n">FAILED</span> <span class="o">=</span> <span class="s2">&quot;FAILED&quot;</span>
 </span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a>
-</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a><span class="k">class</span> <span class="nc">Camera</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
+</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Camera</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
 </span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a><span class="sd">    Enum class representing different camera types.</span>
 </span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a><span class="sd">    &quot;&quot;&quot;</span>
@@ -130,7 +130,7 @@
 </span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a><span class="sd">    &quot;&quot;&quot;</span>
 </span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a>
 </span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a><span class="nd">@dataclass</span>
-</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="k">class</span> <span class="nc">SemanticVersion</span><span class="p">:</span>
+</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="k">class</span><span class="w"> </span><span class="nc">SemanticVersion</span><span class="p">:</span>
 </span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a><span class="sd">    Dataclass representing a semantic version.</span>
 </span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a><span class="sd">    &quot;&quot;&quot;</span>
@@ -150,7 +150,7 @@
 </span><span id="L-51"><a href="#L-51"><span class="linenos">51</span></a><span class="sd">    The patch version number.</span>
 </span><span id="L-52"><a href="#L-52"><span class="linenos">52</span></a><span class="sd">    &quot;&quot;&quot;</span>
 </span><span id="L-53"><a href="#L-53"><span class="linenos">53</span></a>
-</span><span id="L-54"><a href="#L-54"><span class="linenos">54</span></a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-54"><a href="#L-54"><span class="linenos">54</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="L-55"><a href="#L-55"><span class="linenos">55</span></a>        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">major</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">minor</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">patch</span><span class="si">}</span><span class="s2">&quot;</span>
 </span></pre></div>
 
@@ -167,7 +167,7 @@
 
     </div>
     <a class="headerlink" href="#ApiStatus"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="ApiStatus-5"><a href="#ApiStatus-5"><span class="linenos">5</span></a><span class="k">class</span> <span class="nc">ApiStatus</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ApiStatus-5"><a href="#ApiStatus-5"><span class="linenos">5</span></a><span class="k">class</span><span class="w"> </span><span class="nc">ApiStatus</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
 </span><span id="ApiStatus-6"><a href="#ApiStatus-6"><span class="linenos">6</span></a>    <span class="n">SUCCESS</span> <span class="o">=</span> <span class="s2">&quot;SUCCESS&quot;</span><span class="p">,</span>
 </span><span id="ApiStatus-7"><a href="#ApiStatus-7"><span class="linenos">7</span></a>    <span class="n">FAILED</span> <span class="o">=</span> <span class="s2">&quot;FAILED&quot;</span>
 </span></pre></div>
@@ -271,7 +271,7 @@
 
     </div>
     <a class="headerlink" href="#Camera"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Camera-9"><a href="#Camera-9"><span class="linenos"> 9</span></a><span class="k">class</span> <span class="nc">Camera</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Camera-9"><a href="#Camera-9"><span class="linenos"> 9</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Camera</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
 </span><span id="Camera-10"><a href="#Camera-10"><span class="linenos">10</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="Camera-11"><a href="#Camera-11"><span class="linenos">11</span></a><span class="sd">    Enum class representing different camera types.</span>
 </span><span id="Camera-12"><a href="#Camera-12"><span class="linenos">12</span></a><span class="sd">    &quot;&quot;&quot;</span>
@@ -432,7 +432,7 @@
     </div>
     <a class="headerlink" href="#SemanticVersion"></a>
             <div class="pdoc-code codehilite"><pre><span></span><span id="SemanticVersion-34"><a href="#SemanticVersion-34"><span class="linenos">34</span></a><span class="nd">@dataclass</span>
-</span><span id="SemanticVersion-35"><a href="#SemanticVersion-35"><span class="linenos">35</span></a><span class="k">class</span> <span class="nc">SemanticVersion</span><span class="p">:</span>
+</span><span id="SemanticVersion-35"><a href="#SemanticVersion-35"><span class="linenos">35</span></a><span class="k">class</span><span class="w"> </span><span class="nc">SemanticVersion</span><span class="p">:</span>
 </span><span id="SemanticVersion-36"><a href="#SemanticVersion-36"><span class="linenos">36</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="SemanticVersion-37"><a href="#SemanticVersion-37"><span class="linenos">37</span></a><span class="sd">    Dataclass representing a semantic version.</span>
 </span><span id="SemanticVersion-38"><a href="#SemanticVersion-38"><span class="linenos">38</span></a><span class="sd">    &quot;&quot;&quot;</span>
@@ -452,7 +452,7 @@
 </span><span id="SemanticVersion-52"><a href="#SemanticVersion-52"><span class="linenos">52</span></a><span class="sd">    The patch version number.</span>
 </span><span id="SemanticVersion-53"><a href="#SemanticVersion-53"><span class="linenos">53</span></a><span class="sd">    &quot;&quot;&quot;</span>
 </span><span id="SemanticVersion-54"><a href="#SemanticVersion-54"><span class="linenos">54</span></a>
-</span><span id="SemanticVersion-55"><a href="#SemanticVersion-55"><span class="linenos">55</span></a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="SemanticVersion-55"><a href="#SemanticVersion-55"><span class="linenos">55</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="SemanticVersion-56"><a href="#SemanticVersion-56"><span class="linenos">56</span></a>        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">major</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">minor</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">patch</span><span class="si">}</span><span class="s2">&quot;</span>
 </span></pre></div>
 
