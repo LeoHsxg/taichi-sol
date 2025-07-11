@@ -379,18 +379,6 @@ class FCMNotifier:
 
             return True
 
-        except messaging.UnregisteredError as e:
-            print(f"FCM 設備未註冊: {e}")
-            return False
-        except messaging.InvalidArgumentError as e:
-            print(f"FCM 參數錯誤: {e}")
-            return False
-        except messaging.QuotaExceededError as e:
-            print(f"FCM 配額超限: {e}")
-            return False
-        except messaging.ThirdPartyAuthError as e:
-            print(f"FCM 第三方認證錯誤: {e}")
-            return False
         except Exception as e:
             print(f"FCM 通知發送錯誤: {e}")
             return False
@@ -462,9 +450,20 @@ class EyeTrackingServer:
             analysis_thread.daemon = True
             analysis_thread.start()
 
+            # 檢查 FCM 初始化狀態
+            fcm_status = "已初始化" if self.fcm_notifier.app else "未初始化"
+            print(f"FCM 狀態: {fcm_status}")
+
             return {"status": "success", "message": "眼動追蹤已開始"}
 
         except Exception as e:
+            print(f"啟動追蹤時發生錯誤: {e}")
+            # 如果是連接相關錯誤，提供更友善的訊息
+            if "sdp" in str(e) or "NoneType" in str(e):
+                return {
+                    "status": "error",
+                    "message": "無法連接到眼鏡設備，請確認設備已開機並在同一網路",
+                }
             return {"status": "error", "message": f"啟動失敗: {str(e)}"}
 
     def stop_tracking(self):
@@ -495,11 +494,18 @@ class EyeTrackingServer:
             try:
                 gazes = self.sync_client.get_gazes_from_streaming(timeout=5.0)
 
+                # 檢查 gazes 是否為 None 或空
+                if gazes is None:
+                    print("未接收到視線數據，等待中...")
+                    time.sleep(1)
+                    continue
+
                 for gaze in gazes:
                     self.analyzer.add_gaze_data(gaze)
 
                     # 檢查是否需要發送警報
-                    self._check_alerts()
+                    # 先不要讓這一塊運作
+                    # self._check_alerts()
 
                     # 按設定的間隔重製統計數據
                     current_time = time.time()
@@ -511,9 +517,15 @@ class EyeTrackingServer:
                 print(f"分析循環錯誤: {e}")
                 time.sleep(1)
 
+    # 未使用
     def _check_alerts(self):
         """檢查警報條件並發送 FCM 通知"""
         try:
+            # 檢查 FCM 是否已初始化
+            if not self.fcm_notifier.app:
+                print("FCM 未初始化，跳過警報檢查")
+                return
+
             # 獲取當前分析數據
             analysis_data = self.analyzer.get_analysis_data()
             pupil_stats = analysis_data["pupil_statistics"]
@@ -521,43 +533,52 @@ class EyeTrackingServer:
 
             # 檢查眨眼頻率
             if analysis_data["blink_frequency"] > self.blink_frequency_threshold:
-                self.fcm_notifier.send_notification(
-                    title="眨眼頻率警報",
-                    body=f"眨眼頻率過高: {analysis_data['blink_frequency']:.1f} 次/分鐘",
-                    data={
-                        "type": "blink_frequency",
-                        "value": analysis_data["blink_frequency"],
-                        "threshold": self.blink_frequency_threshold,
-                    },
-                )
+                try:
+                    self.fcm_notifier.send_notification(
+                        title="眨眼頻率警報",
+                        body=f"眨眼頻率過高: {analysis_data['blink_frequency']:.1f} 次/分鐘",
+                        data={
+                            "type": "blink_frequency",
+                            "value": analysis_data["blink_frequency"],
+                            "threshold": self.blink_frequency_threshold,
+                        },
+                    )
+                except Exception as e:
+                    print(f"眨眼頻率警報發送失敗: {e}")
 
             # 檢查瞳孔大小
             for eye, size in current_sizes.items():
                 if size and size < self.pupil_size_threshold:
-                    self.fcm_notifier.send_notification(
-                        title="瞳孔大小警報",
-                        body=f"{eye} 瞳孔過小: {size:.2f} mm",
-                        data={
-                            "type": "pupil_size",
-                            "eye": eye,
-                            "value": size,
-                            "threshold": self.pupil_size_threshold,
-                        },
-                    )
+                    try:
+                        self.fcm_notifier.send_notification(
+                            title="瞳孔大小警報",
+                            body=f"{eye} 瞳孔過小: {size:.2f} mm",
+                            data={
+                                "type": "pupil_size",
+                                "eye": eye,
+                                "value": size,
+                                "threshold": self.pupil_size_threshold,
+                            },
+                        )
+                    except Exception as e:
+                        print(f"瞳孔大小警報發送失敗: {e}")
 
             # 檢查有效性率
             for eye, stats in pupil_stats.items():
                 if stats["validity_rate"] < self.validity_threshold:
-                    self.fcm_notifier.send_notification(
-                        title="數據有效性警報",
-                        body=f"{eye} 數據有效性過低: {stats['validity_rate']:.1f}%",
-                        data={
-                            "type": "validity_rate",
-                            "eye": eye,
-                            "value": stats["validity_rate"],
-                            "threshold": self.validity_threshold,
-                        },
-                    )
+                    try:
+                        self.fcm_notifier.send_notification(
+                            title="數據有效性警報",
+                            body=f"{eye} 數據有效性過低: {stats['validity_rate']:.1f}%",
+                            data={
+                                "type": "validity_rate",
+                                "eye": eye,
+                                "value": stats["validity_rate"],
+                                "threshold": self.validity_threshold,
+                            },
+                        )
+                    except Exception as e:
+                        print(f"數據有效性警報發送失敗: {e}")
 
         except Exception as e:
             print(f"警報檢查錯誤: {e}")
