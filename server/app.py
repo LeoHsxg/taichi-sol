@@ -351,30 +351,34 @@ class FCMNotifier:
             return False
 
         try:
-            # 構建通知訊息
-            notification = messaging.Notification(title=title, body=body)
-
             # 構建訊息
             message = messaging.Message(
-                notification=notification,
                 data=data or {},
                 android=android_config,
                 apns=apns_config,
                 webpush=webpush_config,
             )
 
+            # 只有在有 title 時才添加通知
+            if title:
+                notification = messaging.Notification(title=title, body=body)
+                message.notification = notification
+
             # 發送訊息
             if topic:
-                # 發送到主題
-                response = messaging.send_to_topic(topic, message)
+                # 發送到主題 - 使用新的 API
+                message.topic = topic
+                response = messaging.send(message)
                 print(f"FCM 通知發送成功到主題 '{topic}': {title}")
             elif token:
-                # 發送到單一設備
-                response = messaging.send_to_token(token, message)
+                # 發送到單一設備 - 使用新的 API
+                message.token = token
+                response = messaging.send(message)
                 print(f"FCM 通知發送成功到設備: {title}")
             else:
                 # 預設發送到測試主題
-                response = messaging.send_to_topic("test", message)
+                message.topic = "test"
+                response = messaging.send(message)
                 print(f"FCM 通知發送成功到測試主題: {title}")
 
             return True
@@ -693,11 +697,22 @@ def send_fcm_notification():
     """手動發送 FCM 通知"""
     try:
         data = request.json
-        title = data.get("title", "測試通知")
-        body = data.get("body", "這是一個測試通知")
-        notification_data = data.get("data", {})
-        topic = data.get("topic")
-        token = data.get("token")
+
+        # 支援新的 message 格式
+        if "message" in data:
+            message_data = data["message"]
+            title = message_data.get("title")  # 可以是 None
+            body = message_data.get("body", "這是一個測試通知")
+            notification_data = message_data.get("data", {})
+            topic = message_data.get("topic", "test_topic")  # 預設為 test_topic
+            token = message_data.get("token")
+        else:
+            # 支援舊格式
+            title = data.get("title", "測試通知")
+            body = data.get("body", "這是一個測試通知")
+            notification_data = data.get("data", {})
+            topic = data.get("topic", "test_topic")
+            token = data.get("token")
 
         # 平台特定配置
         android_config = None
