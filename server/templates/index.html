@@ -208,15 +208,47 @@
         border: 2px solid var(--border-color);
         background: var(--card-bg);
         color: var(--text-color);
-        font-size: 0.9em;
-        transition: border-color 0.3s ease;
-        border-radius: 0;
+        font-family: inherit;
       }
 
       .form-group input:focus,
       .form-group textarea:focus {
         outline: none;
-        border-color: var(--border-color);
+        border-color: #4caf50;
+      }
+
+      /* 新增的測試按鈕樣式 */
+      .test-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid var(--border-color);
+      }
+
+      .overlay-config {
+      }
+
+      .overlay-config label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: 600;
+        color: var(--text-color);
+      }
+
+      .overlay-config select {
+        width: 100%;
+        padding: 8px;
+        border: 2px solid var(--border-color);
+        background: var(--card-bg);
+        color: var(--text-color);
+        font-family: inherit;
+        margin-bottom: 10px;
+      }
+
+      .overlay-config select:focus {
+        outline: none;
+        border-color: #4caf50;
       }
 
       .loading {
@@ -277,7 +309,6 @@
               <button class="btn" onclick="startTracking()">開始追蹤</button>
               <button class="btn" onclick="stopTracking()">停止追蹤</button>
               <button class="btn" onclick="refreshAnalysis()">刷新分析</button>
-              <button class="btn" onclick="sendTestFCM()">測試 FCM</button>
             </div>
             <div id="status-display">
               <span class="status-indicator status-stopped"></span>
@@ -360,15 +391,21 @@
           <!-- FCM 測試面板 -->
           <div class="fcm-panel">
             <h3>FCM 通知測試</h3>
-            <div class="form-group">
-              <label for="fcm-title">通知標題</label>
-              <input type="text" id="fcm-title" value="眼動追蹤警報" placeholder="輸入通知標題" />
+            <div class="overlay-config">
+              <label for="overlay-type">彈窗類型</label>
+              <select id="overlay-type">
+                <option value="type1">類型1 (預設)</option>
+                <option value="type2">類型2</option>
+                <option value="type3">類型3</option>
+              </select>
             </div>
-            <div class="form-group">
-              <label for="fcm-body">通知內容</label>
-              <textarea id="fcm-body" rows="3" placeholder="輸入通知內容">這是一個測試通知</textarea>
+            <button class="btn" onclick="sendCustomFCM()">發送自定義彈窗</button>
+
+            <!-- 新增的測試按鈕 -->
+            <div class="test-buttons">
+              <button class="btn" onclick="sendNewFormatFCM()">呼叫麻糬彈窗</button>
+              <button class="btn" onclick="sendOldFormatFCM()">測試提醒通知</button>
             </div>
-            <button class="btn" onclick="sendCustomFCM()">發送自定義通知</button>
           </div>
         </div>
       </div>
@@ -455,8 +492,26 @@
         showLoading(false);
       }
 
-      // 發送測試 FCM
-      async function sendTestFCM() {
+      // 發送自定義 FCM
+      async function sendCustomFCM() {
+        const overlayType = document.getElementById("overlay-type").value;
+
+        // 根據 overlay_type 設定不同的內容
+        let overlayMessage = "";
+        switch (overlayType) {
+          case "type1":
+            overlayMessage = "這是類型1的自定義彈窗內容";
+            break;
+          case "type2":
+            overlayMessage = "這是類型2的自定義彈窗內容";
+            break;
+          case "type3":
+            overlayMessage = "這是類型3的自定義彈窗內容";
+            break;
+          default:
+            overlayMessage = "這是預設的自定義彈窗內容";
+        }
+
         showLoading(true);
         try {
           const response = await fetch("/api/send_fcm", {
@@ -465,18 +520,20 @@
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              title: "眼動追蹤測試",
-              body: "這是一個測試通知",
-              data: {
-                type: "test",
-                timestamp: new Date().toISOString(),
+              message: {
+                data: {
+                  show_overlay: "true",
+                  overlay_type: overlayType,
+                  overlay_message: overlayMessage,
+                },
+                topic: "test_topic",
               },
             }),
           });
           const result = await response.json();
 
           if (result.status === "success") {
-            showAlert("FCM 測試通知已發送", "success");
+            showAlert(`自定義 FCM 通知已發送 (${overlayType})`, "success");
           } else {
             showAlert(result.message, "danger");
           }
@@ -486,15 +543,9 @@
         showLoading(false);
       }
 
-      // 發送自定義 FCM
-      async function sendCustomFCM() {
-        const title = document.getElementById("fcm-title").value;
-        const body = document.getElementById("fcm-body").value;
-
-        if (!title || !body) {
-          showAlert("請填寫標題和內容", "danger");
-          return;
-        }
+      // 發送新版 FCM 格式（對應 test_fcm.py 中的 test_new_fcm_format）
+      async function sendNewFormatFCM() {
+        const overlayType = document.getElementById("overlay-type").value;
 
         showLoading(true);
         try {
@@ -504,10 +555,44 @@
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              title: title,
-              body: body,
+              message: {
+                data: {
+                  show_overlay: "true",
+                  overlay_type: overlayType,
+                  overlay_message: "這是新版格式測試的彈窗",
+                },
+                topic: "test_topic",
+              },
+            }),
+          });
+          const result = await response.json();
+
+          if (result.status === "success") {
+            showAlert(`新版格式 FCM 通知已發送 (${overlayType})`, "success");
+          } else {
+            showAlert(result.message, "danger");
+          }
+        } catch (error) {
+          showAlert("FCM 發送失敗: " + error.message, "danger");
+        }
+        showLoading(false);
+      }
+
+      // 發送舊版 FCM 格式（對應 test_fcm.py 中的 test_old_fcm_format）
+      async function sendOldFormatFCM() {
+        showLoading(true);
+        try {
+          const response = await fetch("/api/send_fcm", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              title: "太極麻糬提醒你記得睡覺...",
+              body: "別再滑啦！該休息了！",
+              topic: "test_topic",
               data: {
-                type: "custom",
+                test_key: "test_value",
                 timestamp: new Date().toISOString(),
               },
             }),
@@ -515,7 +600,7 @@
           const result = await response.json();
 
           if (result.status === "success") {
-            showAlert("自定義 FCM 通知已發送", "success");
+            showAlert("舊版格式 FCM 通知已發送", "success");
           } else {
             showAlert(result.message, "danger");
           }
