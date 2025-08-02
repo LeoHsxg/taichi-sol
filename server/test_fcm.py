@@ -9,6 +9,7 @@ def test_new_fcm_format():
     # 你提供的 JSON 格式
     payload = {
         "message": {
+            "token": "cz4Ztxr0S9eHopTQGzQWlB:APA91bGgbUo-av51o9Z-hwfPuy-VGAgunZhjAl6rri-xG2DzrVABvZqlrtqUNY23gWhANkN-7z9lYKQ09OpRe1XSf63QKnlgXx_dqn72FIQkXuSfW-dPq7s",
             "data": {
                 "show_overlay": "true",
                 "overlay_type": "type1",

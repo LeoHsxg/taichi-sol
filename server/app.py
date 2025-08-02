@@ -434,7 +434,21 @@ class EyeTrackingServer:
             return {"status": "error", "message": "追蹤已在運行中"}
 
         try:
+            # 確保先停止之前的連接
+            if self.sync_client:
+                try:
+                    if self.streaming_thread:
+                        self.streaming_thread.cancel()
+                        self.streaming_thread.join(timeout=2.0)
+                except Exception as e:
+                    print(f"清理舊連接時發生錯誤: {e}")
+                finally:
+                    self.sync_client = None
+                    self.streaming_thread = None
+
             address, port = get_ip_and_port()
+            print(f"嘗試連接到眼鏡設備: {address}:{port}")
+
             self.sync_client = SyncClient(address, port)
 
             # 設定分析器參數
@@ -462,6 +476,11 @@ class EyeTrackingServer:
 
         except Exception as e:
             print(f"啟動追蹤時發生錯誤: {e}")
+            # 清理失敗的連接
+            self.sync_client = None
+            self.streaming_thread = None
+            self.is_running = False
+
             # 如果是連接相關錯誤，提供更友善的訊息
             if "sdp" in str(e) or "NoneType" in str(e):
                 return {
@@ -478,12 +497,27 @@ class EyeTrackingServer:
         try:
             self.is_running = False
 
+            # 正確清理串流線程
             if self.streaming_thread:
-                self.streaming_thread.cancel()
-                self.streaming_thread.join()
+                try:
+                    self.streaming_thread.cancel()
+                    self.streaming_thread.join(timeout=3.0)
+                    print("串流線程已停止")
+                except Exception as e:
+                    print(f"停止串流線程時發生錯誤: {e}")
 
+            # 清理客戶端連接
             if self.sync_client:
-                self.sync_client = None
+                try:
+                    # 這裡可以添加任何必要的清理操作
+                    pass
+                except Exception as e:
+                    print(f"清理客戶端連接時發生錯誤: {e}")
+                finally:
+                    self.sync_client = None
+
+            self.streaming_thread = None
+            print("眼動追蹤已完全停止")
 
             return {"status": "success", "message": "眼動追蹤已停止"}
 
@@ -493,18 +527,37 @@ class EyeTrackingServer:
     def _analysis_loop(self):
         """分析循環"""
         last_report_time = time.time()
+        consecutive_errors = 0
+        max_consecutive_errors = 5
 
         while self.is_running:
             try:
+                if not self.sync_client:
+                    print("客戶端連接已丟失，停止分析循環")
+                    break
+
                 gazes = self.sync_client.get_gazes_from_streaming(timeout=5.0)
 
                 # 檢查 gazes 是否為 None 或空
                 if gazes is None:
                     print("未接收到視線數據，等待中...")
+                    consecutive_errors += 1
+
+                    # 如果連續錯誤過多，停止追蹤
+                    if consecutive_errors >= max_consecutive_errors:
+                        print(f"連續 {max_consecutive_errors} 次未接收到數據，停止追蹤")
+                        self.is_running = False
+                        break
+
                     time.sleep(1)
                     continue
 
+                # 重置錯誤計數
+                consecutive_errors = 0
+
                 for gaze in gazes:
+                    if not self.is_running:
+                        break
                     self.analyzer.add_gaze_data(gaze)
 
                     # 檢查是否需要發送警報
@@ -518,7 +571,15 @@ class EyeTrackingServer:
                         last_report_time = current_time
 
             except Exception as e:
-                print(f"分析循環錯誤: {e}")
+                consecutive_errors += 1
+                print(f"分析循環錯誤 (第 {consecutive_errors} 次): {e}")
+
+                # 如果連續錯誤過多，停止追蹤
+                if consecutive_errors >= max_consecutive_errors:
+                    print(f"連續 {max_consecutive_errors} 次錯誤，停止追蹤")
+                    self.is_running = False
+                    break
+
                 time.sleep(1)
 
     # 未使用
@@ -765,4 +826,16 @@ def get_fcm_status():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    try:
+        app.run(debug=True, host="0.0.0.0", port=5000)
+    except KeyboardInterrupt:
+        print("\n正在關閉應用程式...")
+        # 確保在關閉時停止追蹤
+        if eye_tracking_server.is_running:
+            eye_tracking_server.stop_tracking()
+        print("應用程式已關閉")
+    except Exception as e:
+        print(f"應用程式運行時發生錯誤: {e}")
+        # 確保在關閉時停止追蹤
+        if eye_tracking_server.is_running:
+            eye_tracking_server.stop_tracking()
