@@ -301,6 +301,8 @@ class FCMNotifier:
         """
         self.project_id = project_id
         self.app = None
+        # 預設 token
+        self.default_token = "cz4Ztxr0S9eHopTQGzQWlB:APA91bGgbUo-av51o9Z-hwfPuy-VGAgunZhjAl6rri-xG2DzrVABvZqlrtqUNY23gWhANkN-7z9lYKQ09OpRe1XSf63QKnlgXx_dqn72FIQkXuSfW-dPq7s"
         self._initialize_firebase(service_account_path)
 
     def _initialize_firebase(self, service_account_path):
@@ -376,10 +378,10 @@ class FCMNotifier:
                 response = messaging.send(message)
                 print(f"FCM 通知發送成功到設備: {title}")
             else:
-                # 預設發送到測試主題
-                message.topic = "test"
+                # 使用預設 token 發送到設備
+                message.token = self.default_token
                 response = messaging.send(message)
-                print(f"FCM 通知發送成功到測試主題: {title}")
+                print(f"FCM 通知發送成功到預設設備: {title}")
 
             return True
 
@@ -607,6 +609,7 @@ class EyeTrackingServer:
                             "value": analysis_data["blink_frequency"],
                             "threshold": self.blink_frequency_threshold,
                         },
+                        token=self.fcm_notifier.default_token,
                     )
                 except Exception as e:
                     print(f"眨眼頻率警報發送失敗: {e}")
@@ -624,6 +627,7 @@ class EyeTrackingServer:
                                 "value": size,
                                 "threshold": self.pupil_size_threshold,
                             },
+                            token=self.fcm_notifier.default_token,
                         )
                     except Exception as e:
                         print(f"瞳孔大小警報發送失敗: {e}")
@@ -641,6 +645,7 @@ class EyeTrackingServer:
                                 "value": stats["validity_rate"],
                                 "threshold": self.validity_threshold,
                             },
+                            token=self.fcm_notifier.default_token,
                         )
                     except Exception as e:
                         print(f"數據有效性警報發送失敗: {e}")
@@ -766,14 +771,16 @@ def send_fcm_notification():
             body = message_data.get("body", "這是一個測試通知")
             notification_data = message_data.get("data", {})
             topic = message_data.get("topic", "test_topic")  # 預設為 test_topic
-            token = message_data.get("token")
+            token = message_data.get(
+                "token", eye_tracking_server.fcm_notifier.default_token
+            )
         else:
             # 支援舊格式
             title = data.get("title", "測試通知")
             body = data.get("body", "這是一個測試通知")
             notification_data = data.get("data", {})
             topic = data.get("topic", "test_topic")
-            token = data.get("token")
+            token = data.get("token", eye_tracking_server.fcm_notifier.default_token)
 
         # 平台特定配置
         android_config = None
